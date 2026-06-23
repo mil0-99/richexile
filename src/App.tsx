@@ -163,7 +163,8 @@ export default function App() {
         {/* Setup / Upload flow */}
         {(appState === 'setup' || appState === 'processing') && (
           <div className="space-y-6">
-            {/* Step 1: Tab type */}
+
+            {/* Step 1: Tab type — always visible */}
             <section className="rounded-xl border border-stone-800 bg-stone-900/50 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">1</span>
@@ -172,68 +173,72 @@ export default function App() {
               <TabTypeSelector selected={tabType} onChange={setTabType} />
             </section>
 
-            {/* Step 2: Upload */}
-            <section className="rounded-xl border border-stone-800 bg-stone-900/50 p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">2</span>
-                  <h3 className="text-sm font-semibold text-stone-200">Upload screenshot</h3>
+            {/* Step 2: Upload + Analyse — only shown once tab type is picked */}
+            {tabType && (
+              <section className="rounded-xl border border-stone-800 bg-stone-900/50 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">2</span>
+                    <h3 className="text-sm font-semibold text-stone-200">Upload screenshot</h3>
+                  </div>
+                  {tabType === 'quad' && (
+                    <p className="text-xs text-stone-500">Partial screenshots supported</p>
+                  )}
                 </div>
-                {file && tabType && (
-                  <p className="text-xs text-stone-500">
-                    Tip: partial screenshots of quad tabs are supported
-                  </p>
+
+                <UploadArea file={file} previewUrl={previewUrl} onFile={handleFile} onClear={handleClearFile} />
+
+                {/* Grid calibration */}
+                {file && gridConfig && (tabType === 'currency' || tabType === 'essence' || tabType === 'omen' || tabType === 'rune' || tabType === 'fragment') && (
+                  <GridCalibration
+                    config={gridConfig}
+                    onChange={setGridConfig}
+                    imageWidth={imageSize.w}
+                    imageHeight={imageSize.h}
+                  />
                 )}
-              </div>
-              <UploadArea file={file} previewUrl={previewUrl} onFile={handleFile} onClear={handleClearFile} />
 
-              {/* Grid calibration (shown after file upload for relevant tab types) */}
-              {file && gridConfig && (tabType === 'currency' || tabType === 'essence' || tabType === 'omen' || tabType === 'rune' || tabType === 'fragment') && (
-                <GridCalibration
-                  config={gridConfig}
-                  onChange={setGridConfig}
-                  imageWidth={imageSize.w}
-                  imageHeight={imageSize.h}
-                />
-              )}
-            </section>
-
-            {/* Price loading status */}
-            {tabType && selectedLeague && (
-              <div className="flex items-center gap-3 text-xs">
-                {pricesLoading ? (
-                  <>
-                    <div className="flex-1 h-1.5 rounded-full bg-stone-800 overflow-hidden">
+                {/* Price loading indicator */}
+                {selectedLeague && pricesLoading && (
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex-1 h-1 rounded-full bg-stone-800 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-amber-600 transition-all duration-300"
                         style={{ width: `${pricesProgress}%` }}
                       />
                     </div>
-                    <span className="text-stone-500 whitespace-nowrap">Loading {selectedLeague.id} prices…</span>
-                  </>
-                ) : pricesError ? (
-                  <span className="text-red-400">Failed to load prices: {pricesError}</span>
-                ) : Object.keys(priceMap).length > 0 ? (
-                  <span className="text-emerald-500">
-                    ✓ {Object.keys(priceMap).length} items priced for {selectedLeague.id}
-                  </span>
-                ) : null}
-              </div>
-            )}
+                    <span className="text-stone-500 whitespace-nowrap">Loading prices…</span>
+                  </div>
+                )}
+                {pricesError && (
+                  <p className="text-xs text-red-400">Failed to load prices: {pricesError}</p>
+                )}
 
-            {/* Analyse button */}
-            {appState === 'setup' && (
-              <button
-                className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-stone-800 disabled:text-stone-600 disabled:cursor-not-allowed text-white font-semibold transition-colors text-sm"
-                onClick={handleAnalyse}
-                disabled={!canAnalyse}
-              >
-                {!tabType ? 'Select a tab type first' :
-                 !file ? 'Upload a screenshot first' :
-                 pricesLoading ? 'Waiting for price data…' :
-                 Object.keys(priceMap).length === 0 ? 'No price data available' :
-                 'Analyse Screenshot'}
-              </button>
+                {/* Analyse button — the primary CTA */}
+                {appState === 'setup' && (
+                  <button
+                    className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all
+                      bg-amber-600 hover:bg-amber-500 text-white
+                      disabled:bg-stone-800 disabled:text-stone-600 disabled:cursor-not-allowed"
+                    onClick={handleAnalyse}
+                    disabled={!canAnalyse}
+                  >
+                    {!file
+                      ? 'Upload a screenshot to continue'
+                      : pricesLoading
+                      ? 'Loading price data…'
+                      : Object.keys(priceMap).length === 0
+                      ? 'No price data — try switching league'
+                      : 'Analyse Screenshot →'}
+                  </button>
+                )}
+
+                {Object.keys(priceMap).length > 0 && !pricesLoading && (
+                  <p className="text-center text-xs text-stone-600">
+                    {Object.keys(priceMap).length} items priced · {selectedLeague?.id}
+                  </p>
+                )}
+              </section>
             )}
 
             {/* Processing state */}

@@ -1,10 +1,13 @@
 import type { League } from '../types';
 
-// Known PoE2 leagues as fallback if the API is unavailable
+// Known PoE2 leagues as fallback if the API is unavailable (newest first)
 const FALLBACK_LEAGUES: League[] = [
+  { id: 'Return of the Ancients', realm: 'poe2', season: 'Return of the Ancients' },
   { id: 'Dawn of the Hunt', realm: 'poe2', season: 'Dawn of the Hunt' },
   { id: 'Standard', realm: 'poe2' },
   { id: 'Hardcore', realm: 'poe2' },
+  { id: 'Hardcore Return of the Ancients', realm: 'poe2', season: 'Return of the Ancients' },
+  { id: 'Hardcore Dawn of the Hunt', realm: 'poe2', season: 'Dawn of the Hunt' },
 ];
 
 interface GGGLeague {
