@@ -324,7 +324,8 @@ export async function processScreenshot(
   tabType: TabType,
   priceMap: PriceMap,
   divinePrice: number,
-  onProgress?: (stage: string, pct: number) => void
+  onProgress?: (stage: string, pct: number) => void,
+  suppliedGrid?: GridConfig | null
 ): Promise<DetectedItem[]> {
   // Load screenshot into ImageData
   const bitmap = await createImageBitmap(file);
@@ -347,8 +348,12 @@ export async function processScreenshot(
 
   onProgress?.('Analysing screenshot…', 0);
 
-  if (tabType === 'currency' || tabType === 'essence' || tabType === 'omen' || tabType === 'rune' || tabType === 'fragment') {
-    const grid = autoDetectGrid(imageData);
+  const isStructured = tabType === 'currency' || tabType === 'essence' || tabType === 'omen'
+    || tabType === 'rune' || tabType === 'fragment';
+
+  if (isStructured) {
+    // Use OCR-derived grid if available, otherwise fall back to proportional estimate
+    const grid = suppliedGrid ?? autoDetectGrid(imageData);
     if (grid) {
       return detectItemsInGrid(imageData, templates, grid, divinePrice, (pct) => {
         onProgress?.('Analysing screenshot…', pct);

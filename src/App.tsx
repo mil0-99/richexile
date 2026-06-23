@@ -101,7 +101,8 @@ export default function App() {
         (stage, pct) => {
           setProcessingStage(stage);
           setProcessingProgress(pct);
-        }
+        },
+        gridConfig
       );
 
       setItems(detected);
@@ -110,7 +111,7 @@ export default function App() {
       console.error('Processing error:', e);
       setAppState('setup');
     }
-  }, [file, tabType, priceMap, divinePrice]);
+  }, [file, tabType, priceMap, divinePrice, gridConfig]);
 
   const handleReset = useCallback(() => {
     handleClearFile();

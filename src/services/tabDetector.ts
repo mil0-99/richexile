@@ -118,8 +118,8 @@ export async function detectStashTab(
     } else if (tabType) {
       // STASH title not found — fall back to proportion-based detection
       // but use image aspect ratio to estimate scale better
-      const scale = imageWidth / 2560;
-      const cellSize = Math.round(Math.max(24, Math.min(80, 47 * scale * 2)));
+      const scale = imageWidth / 1920;
+      const cellSize = Math.round(Math.max(24, Math.min(80, 47 * scale)));
       const panelWidth = Math.round(imageWidth * 0.38);
       const panelLeft = imageWidth - panelWidth;
       const gridTop = Math.round(imageHeight * 0.13);

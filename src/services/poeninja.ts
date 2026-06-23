@@ -42,6 +42,16 @@ interface Poe2Response {
   items: Poe2Item[];
 }
 
+// Route icons through images.weserv.nl so canvas getImageData works (poecdn.com has no CORS headers)
+function proxyIcon(imagePath: string): string {
+  if (!imagePath) return '';
+  // Normalize to a web.poecdn.com absolute URL, then strip protocol for weserv
+  const abs = imagePath.startsWith('/')
+    ? `web.poecdn.com${imagePath}`
+    : imagePath.replace(/^https?:\/\/[^/]+/, 'web.poecdn.com');
+  return `https://images.weserv.nl/?url=${encodeURIComponent(abs)}`;
+}
+
 async function fetchOverview(league: string, type: string): Promise<Poe2Response | null> {
   const url = `${BASE}?league=${encodeURIComponent(league)}&type=${encodeURIComponent(type)}`;
   try {
@@ -87,8 +97,7 @@ export async function fetchPricesForTab(
           if (!meta) continue;
           const divineValue = line.primaryValue;
           const chaosValue = divineValue * divinePrice;
-          const iconPath = meta.image ?? '';
-          const icon = iconPath.startsWith('http') ? iconPath : `https://poe.ninja${iconPath}`;
+          const icon = proxyIcon(meta.image ?? '');
           map[meta.name] = { chaosValue, divineValue, icon };
         }
       } finally {
@@ -139,8 +148,7 @@ export async function fetchAllPrices(
           if (!meta) continue;
           const divineValue = line.primaryValue;
           const chaosValue = divineValue * divinePrice;
-          const iconPath = meta.image ?? '';
-          const icon = iconPath.startsWith('http') ? iconPath : `https://poe.ninja${iconPath}`;
+          const icon = proxyIcon(meta.image ?? '');
           map[meta.name] = { chaosValue, divineValue, icon };
         }
       } finally {
