@@ -8,14 +8,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/poeninja-api': {
-        target: 'https://poe2.ninja',
+        target: 'https://poe.ninja',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/poeninja-api/, '/api/data'),
-      },
-      '/ggg-api': {
-        target: 'https://api.pathofexile.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ggg-api/, ''),
+        rewrite: (path) => path.replace(/^\/poeninja-api/, '/poe2/api/economy/exchange/current'),
       },
     },
   },

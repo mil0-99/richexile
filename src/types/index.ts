@@ -15,42 +15,6 @@ export interface League {
   season?: string;
 }
 
-export interface CurrencyLine {
-  currencyTypeName: string;
-  chaosEquivalent: number;
-  detailsId: string;
-  pay?: { value: number };
-  receive?: { value: number };
-}
-
-export interface CurrencyDetail {
-  id: number;
-  icon: string;
-  name: string;
-  poeTradeId?: number;
-}
-
-export interface CurrencyOverviewResponse {
-  lines: CurrencyLine[];
-  currencyDetails: CurrencyDetail[];
-}
-
-export interface ItemLine {
-  id: number;
-  name: string;
-  icon: string;
-  chaosValue: number;
-  divineValue: number;
-  count: number;
-  baseType?: string;
-  links?: number;
-  levelRequired?: number;
-  itemClass?: string;
-}
-
-export interface ItemOverviewResponse {
-  lines: ItemLine[];
-}
 
 export interface PriceMap {
   [name: string]: {
