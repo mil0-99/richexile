@@ -98,13 +98,31 @@ export interface GridConfig {
 export function autoDetectGrid(imageData: ImageData): GridConfig | null {
   const { width, height } = imageData;
 
-  // Look for alternating dark/lighter bands (icon rows)
-  // Very simplified: assume standard PoE2 layout at ~1920x1080
+  // Determine whether this is a cropped stash screenshot (panel only) or a full game screenshot.
+  // A cropped stash is roughly portrait/square; a full game screenshot is wide (16:9 or wider).
+  const aspectRatio = width / height;
+  const isCroppedStash = aspectRatio < 1.2; // portrait or near-square → stash fills the image
+
   const scale = width / 1920;
   const cellSize = Math.round(47 * scale);
-  const startX = Math.round(width * 0.62); // stash panel typically in right ~38% of screen
-  const startY = Math.round(height * 0.12);
-  const cols = Math.floor((width * 0.36) / cellSize);
+
+  let startX: number;
+  let startY: number;
+  let panelWidth: number;
+
+  if (isCroppedStash) {
+    // Stash panel fills most of the image
+    startX = 4;
+    startY = Math.round(height * 0.14);
+    panelWidth = width - 8;
+  } else {
+    // Full game screenshot — stash is in the right ~38%
+    startX = Math.round(width * 0.62);
+    startY = Math.round(height * 0.12);
+    panelWidth = width * 0.36;
+  }
+
+  const cols = Math.floor(panelWidth / cellSize);
   const rows = Math.floor((height * 0.75) / cellSize);
 
   if (cols < 2 || rows < 2) return null;
@@ -176,7 +194,7 @@ export async function detectItemsInGrid(
   const detected: DetectedItem[] = [];
   const totalCells = grid.cols * grid.rows;
   let done = 0;
-  const MATCH_THRESHOLD = 0.35; // lower = stricter
+  const MATCH_THRESHOLD = 0.40; // lower = stricter
 
   for (let row = 0; row < grid.rows; row++) {
     for (let col = 0; col < grid.cols; col++) {
@@ -203,13 +221,13 @@ export async function detectItemsInGrid(
 
       const cellData = cellCtx.getImageData(0, 0, TEMPLATE_SIZE, TEMPLATE_SIZE);
 
-      // Check if cell appears empty (mostly dark)
+      // Check if cell appears empty (mostly dark background, no icon)
       let totalBrightness = 0;
       for (let i = 0; i < cellData.data.length; i += 4) {
         totalBrightness += (cellData.data[i] + cellData.data[i + 1] + cellData.data[i + 2]) / 3;
       }
       const avgBrightness = totalBrightness / (cellData.data.length / 4);
-      if (avgBrightness < 12) {
+      if (avgBrightness < 8) {
         done++;
         onProgress?.((done / totalCells) * 100);
         continue;

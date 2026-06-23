@@ -60,14 +60,30 @@ export async function detectStashTab(
     const words: any[] = (data as any).words ?? [];
 
     // ── Tab type detection ──────────────────────────────────────────────────
+    // Only match keywords in words that appear to be in the stash CONTENT area
+    // (below the top ~18% of the image), to avoid reading the tab bar label
+    // as the content type.
+    const contentWords = words.filter((w: { bbox: { y0: number } }) => w.bbox.y0 > imageHeight * 0.18);
+    const contentText = contentWords.map((w: { text: string }) => w.text).join(' ');
+
     let tabType: TabType | null = null;
     let confidence = 0;
 
+    // Try content area first; fall back to full text only if nothing found
     for (const { keywords, type } of TAB_KEYWORDS) {
-      if (keywords.test(rawText)) {
+      if (keywords.test(contentText)) {
         tabType = type;
-        confidence = 0.85;
+        confidence = 0.75;
         break;
+      }
+    }
+    if (!tabType) {
+      for (const { keywords, type } of TAB_KEYWORDS) {
+        if (keywords.test(rawText)) {
+          tabType = type;
+          confidence = 0.5; // lower confidence — came from tab bar label
+          break;
+        }
       }
     }
 
@@ -82,23 +98,27 @@ export async function detectStashTab(
     if (stashWord) {
       const sb = (stashWord as { bbox: { x0: number; y0: number; x1: number; y1: number } }).bbox;
 
-      // Tab bar: find any word that matches a tab keyword near the same vertical band
+      // Words in the tab bar: same vertical band as STASH title
       const nearbyWords = words.filter((w: { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }) => {
-        return Math.abs(w.bbox.y0 - sb.y0) < imageHeight * 0.08;
+        return Math.abs(w.bbox.y0 - sb.y0) < imageHeight * 0.1;
       });
 
       const tabBarBottom = nearbyWords.length > 0
         ? Math.max(...nearbyWords.map((w: { bbox: { y1: number } }) => w.bbox.y1))
         : sb.y1 + 20;
 
-      // Panel left edge: slightly to the left of the "STASH" label
-      const panelLeft = Math.max(0, sb.x0 - 20);
+      // Panel left edge: use leftmost word in tab bar area (more reliable than STASH x0,
+      // because STASH is a centered title, not flush with the left edge)
+      const leftmostTabX = nearbyWords.length > 0
+        ? Math.min(...nearbyWords.map((w: { bbox: { x0: number } }) => w.bbox.x0))
+        : 0;
+      const panelLeft = Math.max(0, leftmostTabX - 8);
 
       // Grid starts just below tab bar
-      const gridTop = tabBarBottom + 4;
+      const gridTop = tabBarBottom + 6;
 
-      // Panel width: from panelLeft to image right edge, with a small margin
-      const panelWidth = imageWidth - panelLeft - 10;
+      // Panel width: from panelLeft to image right edge
+      const panelWidth = imageWidth - panelLeft - 8;
 
       // Estimate cell size from the panel width and expected column count
       const expectedCols = (tabType && TAB_COLS[tabType]) ?? 12;
