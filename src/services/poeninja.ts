@@ -5,7 +5,7 @@ import type {
   TabType,
 } from '../types';
 
-const BASE = 'https://poe.ninja/api/data';
+const BASE = 'https://poe2.ninja/api/data';
 
 // Poe.ninja item types by stash tab type
 const TAB_TYPE_MAP: Partial<Record<TabType, { endpoint: 'currency' | 'item'; type: string }[]>> = {
@@ -45,7 +45,7 @@ async function fetchWithFallback(url: string): Promise<Response> {
   }
 
   // Use dev proxy if available
-  const proxyUrl = url.replace('https://poe.ninja/api/data', '/poeninja-api');
+  const proxyUrl = url.replace('https://poe2.ninja/api/data', '/poeninja-api');
   return fetch(proxyUrl, { headers: { 'Accept': 'application/json' } });
 }
 

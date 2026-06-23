@@ -241,12 +241,8 @@ export default function App() {
                   )}
                 </div>
                 <TabTypeSelector selected={tabType} onChange={setTabType} />
-              </section>
-            )}
 
-            {/* Price loading + Analyse button */}
-            {file && !isDetecting && tabType && (
-              <div className="space-y-2">
+                {/* Price loading bar */}
                 {selectedLeague && pricesLoading && (
                   <div className="flex items-center gap-3 text-xs">
                     <div className="flex-1 h-1 rounded-full bg-stone-800 overflow-hidden">
@@ -262,7 +258,8 @@ export default function App() {
                   <p className="text-xs text-red-400">Price load failed: {pricesError}</p>
                 )}
 
-                {appState === 'setup' && (
+                {/* Analyse button — inside this section so it's always visible */}
+                {appState === 'setup' && tabType && (
                   <button
                     className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all
                       bg-amber-600 hover:bg-amber-500 text-white
@@ -278,12 +275,12 @@ export default function App() {
                   </button>
                 )}
 
-                {Object.keys(priceMap).length > 0 && !pricesLoading && (
+                {Object.keys(priceMap).length > 0 && !pricesLoading && tabType && (
                   <p className="text-center text-xs text-stone-600">
                     {Object.keys(priceMap).length} items priced · {selectedLeague?.id}
                   </p>
                 )}
-              </div>
+              </section>
             )}
 
             {/* Processing progress */}
